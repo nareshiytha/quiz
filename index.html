@@ -695,8 +695,10 @@ const baseQuestions = [
 ];
 
 /* Split into difficulty pools */
-let poolHard = baseQuestions.filter(q => q.difficulty === "hard");
-let poolHarder = baseQuestions.filter(q => q.difficulty === "harder");
+/*let poolHard = baseQuestions.filter(q => q.difficulty === "hard");
+let poolHarder = baseQuestions.filter(q => q.difficulty === "harder");*/
+
+let unifiedPool = [...baseQuestions];
 
 /* -----------------------------
    PART 3 (LOGIC) WILL FOLLOW
@@ -729,7 +731,7 @@ document.addEventListener("DOMContentLoaded", () => {
    PICK QUESTION (NO REPEATS)
 ----------------------------- */
 
-function pickQuestionFromPool(diff) {
+/*function pickQuestionFromPool(diff) {
   let pool = diff === "hard" ? poolHard : poolHarder;
 
   // Filter out used questions
@@ -742,7 +744,21 @@ function pickQuestionFromPool(diff) {
 
   usedQuestions.add(q.id);
   return q;
+}*/
+
+function pickQuestion() {
+  // Filter out used questions
+  const remaining = unifiedPool.filter(q => !usedQuestions.has(q.id));
+
+  if (remaining.length === 0) return null;
+
+  const idx = Math.floor(Math.random() * remaining.length);
+  const q = remaining[idx];
+
+  usedQuestions.add(q.id);
+  return q;
 }
+
 
 /* -----------------------------
    SIMULATED AI GENERATOR
@@ -810,8 +826,9 @@ async function loadNextQuestion() {
 
   updateStatus();
 
-  let q = pickQuestionFromPool(currentDifficulty);
-  if (!q) q = await generateQuestionViaAPI(currentDifficulty);
+//  let q = pickQuestionFromPool(currentDifficulty);
+let q = pickQuestion();
+  //if (!q) q = await generateQuestionViaAPI(currentDifficulty);
   if (!q) {
     alert("No questions available.");
     return;
