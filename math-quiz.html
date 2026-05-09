@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NC Math 2 Adaptive Quiz (Dynamic)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .app {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    header h1 { margin: 0; }
+    .status-bar {
+      display: flex;
+      gap: 20px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+    .status-item {
+      background: #eee;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .question-card {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .choices { list-style: none; padding: 0; }
+    .choice {
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .choice.correct { background: #d4f8d4; border-color: #2e8b57; }
+    .choice.incorrect { background: #ffd6d6; border-color: #b22222; }
+    .choice.selected { background: #e6f0ff; border-color: #4a90e2; }
+    .hint-box, .explanation-box {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .hint-box { background: #fff8d6; border: 1px solid #f0d96a; }
+    .explanation-box { background: #e6ffff; border: 1px solid #66d9e8; }
+    button {
+      padding: 8px 15px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .btn-primary { background: #4a90e2; color: white; }
+    .btn-muted { background: #ddd; }
+    .btn-outline { background: white; border: 1px solid #4a90e2; color: #4a90e2; }
+  </style>
+</head>
+
+<body>
+<div class="app">
+  <header>
+    <h1>NC Math 2 Adaptive Quiz</h1>
+  </header>
+
+  <div class="status-bar">
+    <div class="status-item">Questions: <span id="status-question">0 / 5</span></div>
+    <div class="status-item">Difficulty: <span id="status-difficulty">Not set</span></div>
+    <div class="status-item">Batch Score: <span id="status-batch-score">0 / 0</span></div>
+    <div class="status-item">Overall: <span id="status-overall-score">0 / 0</span></div>
+  </div>
+
+  <div id="difficulty-select">
+    <p>Select starting difficulty:</p>
+    <button class="btn-outline" data-diff="hard">Hard</button>
+    <button class="btn-outline" data-diff="harder">Harder</button>
+  </div>
+
+  <div id="question-container" style="display:none;">
+    <div class="question-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div><strong>Standard:</strong> <span id="question-standard"></span></div>
+          <div><strong>Difficulty:</strong> <span id="question-difficulty"></span></div>
+        </div>
+        <div id="feedback"></div>
+      </div>
+
+      <h2 id="question-stem"></h2>
+
+      <ul id="choices-list" class="choices"></ul>
+
+      <div id="hint-box" class="hint-box" style="display:none;"></div>
+      <div id="explanation-box" class="explanation-box" style="display:none;"></div>
+
+      <div style="margin-top:10px;">
+        <button id="btn-submit" class="btn-primary">Submit</button>
+        <button id="btn-hint" class="btn-muted">Show Hint</button>
+        <button id="btn-next" class="btn-outline" disabled>Next</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="summary-container" style="display:none;margin-top:20px;"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  /* -----------------------------
+     PART 1 — QUIZ STATE VARIABLES
+  ----------------------------- */
+
+  let currentDifficulty = null;
+  let batchQuestionCount = 0;
+  const BATCH_SIZE = 5; // Set to 5 for quick testing. Change back to 50 if desired.
+
+  let batchCorrect = 0;
+  let batchTotalAnswered = 0;
+  let overallCorrect = 0;
+  let overallTotal = 0;
+  let currentQuestion = null;
+  let currentChoicesLocked = false;
+  let usedQuestions = new Set(); // Memory now persists across all batches!
+
+  /* -----------------------------
+     PART 2 — DYNAMIC DATA FETCHING
+  ----------------------------- */
+
+  // Helper function to clean up weird characters from internet data
+  function decodeHTML(html) {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+  }
+
+  // Fetch from Open Trivia Math API
+  async function fetchQuestionFromAPI(difficulty) {
+    // OpenTDB accepts "medium" and "hard"
+    const apiDiff = difficulty === "harder" ? "hard" : "medium";
+    const url = `https://opentdb.com/api.php?amount=1&category=19&difficulty=${apiDiff}&type=multiple`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        const q = data.results[0];
+
+        // Combine and shuffle choices
+        let choices = [...q.incorrect_answers, q.correct_answer];
+        choices = choices.sort(() => Math.random() - 0.5); 
+        
+        // Find correct answer index post-shuffle
+        const answerIndex = choices.indexOf(q.correct_answer);
+
+        const newQuestion = {
+          id: "API_" + Math.floor(Math.random() * 1000000),
+          standardTag: "General Math", 
+          difficulty: difficulty,
+          stem: decodeHTML(q.question),
+          choices: choices.map(decodeHTML),
+          answerIndex: answerIndex,
+          hint: "Read the question carefully and eliminate obvious wrong answers.",
+          explanation: `The correct answer is ${decodeHTML(q.correct_answer)}.`
+        };
+        
+        usedQuestions.add(newQuestion.id);
+        return newQuestion;
+      }
+    } catch (error) {
+      console.error("Failed to fetch from internet:", error);
+    }
+    
+    return null;
+  }
+
+  /* -----------------------------
+     PART 3 — UI RENDERING & LOGIC
+  ----------------------------- */
+
+  function renderQuestion(q) {
+    currentQuestion = q;
+    currentChoicesLocked = false;
+
+    document.getElementById("question-standard").textContent = q.standardTag;
+    document.getElementById("question-difficulty").textContent = q.difficulty;
+    document.getElementById("question-stem").textContent = q.stem;
+
+    const list = document.getElementById("choices-list");
+    list.innerHTML = "";
+
+    q.choices.forEach((text, idx) => {
+      const li = document.createElement("li");
+      li.className = "choice";
+      li.dataset.correct = (idx === q.answerIndex) ? "true" : "false";
+
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "choice";
+
+      li.appendChild(radio);
+      li.appendChild(document.createTextNode(text));
+      list.appendChild(li);
+    });
+
+    document.getElementById("feedback").textContent = "";
+    document.getElementById("hint-box").style.display = "none";
+    document.getElementById("explanation-box").style.display = "none";
+
+    document.getElementById("btn-next").disabled = true;
+  }
+
+  async function loadNextQuestion() {
+    if (batchQuestionCount >= BATCH_SIZE) {
+      showBatchSummary();
+      return;
+    }
+
+    updateStatus();
+    
+    // Show user that a fetch is happening
+    const btnNext = document.getElementById("btn-next");
+    btnNext.textContent = "Loading...";
+
+    // Dynamically fetch next question
+    let q = await fetchQuestionFromAPI(currentDifficulty);
+    
+    if (!q) {
+      alert("No questions available from the server. Please check your connection or wait a moment.");
+      btnNext.textContent = "Next";
+      return;
+    }
+
+    batchQuestionCount++;
+    renderQuestion(q);
+    updateStatus();
+    
+    btnNext.textContent = "Next";
+  }
+
+  function submitAnswer() {
+    if (currentChoicesLocked) return;
+
+    const selected = document.querySelector(".choice.selected");
+    if (!selected) {
+      alert("Select an answer first.");
+      return;
+    }
+
+    const isCorrect = selected.dataset.correct === "true";
+
+    batchTotalAnswered++;
+    overallTotal++;
+
+    if (isCorrect) {
+      batchCorrect++;
+      overallCorrect++;
+    }
+
+    lockChoices(isCorrect);
+    updateStatus();
+  }
+
+  function lockChoices(isCorrect) {
+    currentChoicesLocked = true;
+    const selected = document.querySelector(".choice.selected");
+
+    document.querySelectorAll(".choice").forEach(choice => {
+      if (choice.dataset.correct === "true") {
+        choice.classList.add("correct");
+      } else if (selected && choice === selected) {
+        choice.classList.add("incorrect");
+      }
+
+      choice.querySelector("input").disabled = true;
+      choice.classList.remove("selected");
+    });
+
+    document.getElementById("feedback").textContent =
+      isCorrect ? "Correct!" : "Incorrect.";
+
+    const exp = document.getElementById("explanation-box");
+    exp.style.display = "block";
+    exp.textContent = "Explanation: " + currentQuestion.explanation;
+
+    document.getElementById("btn-next").disabled = false;
+  }
+
+  function showBatchSummary() {
+    document.getElementById("question-container").style.display = "none";
+
+    const pct = batchTotalAnswered === 0 ? 0 : Math.round((batchCorrect / batchTotalAnswered) * 100);
+
+    let oldDiff = currentDifficulty;
+    // Difficulty logic adaptation
+    if (pct >= 80 && currentDifficulty === "hard") currentDifficulty = "harder";
+    else if (pct < 50 && currentDifficulty === "harder") currentDifficulty = "hard";
+
+    const summary = `
+      <h2>Batch Summary</h2>
+      <p>Score: ${batchCorrect} / ${batchTotalAnswered} (${pct}%)</p>
+      <p>Previous Difficulty: ${oldDiff}</p>
+      <p>New Difficulty: ${currentDifficulty}</p>
+      <button id="btn-next-batch" class="btn-primary">Next Batch</button>
+    `;
+
+    const container = document.getElementById("summary-container");
+    container.innerHTML = summary;
+    container.style.display = "block";
+
+    document.getElementById("btn-next-batch").onclick = () => {
+      // Reset only the batch numbers, KEEP usedQuestions alive
+      batchQuestionCount = 0;
+      batchCorrect = 0;
+      batchTotalAnswered = 0;
+
+      container.style.display = "none";
+      document.getElementById("question-container").style.display = "block";
+
+      loadNextQuestion();
+    };
+  }
+
+  function updateStatus() {
+    document.getElementById("status-question").textContent =
+      `${batchQuestionCount} / ${BATCH_SIZE}`;
+
+    document.getElementById("status-difficulty").textContent =
+      currentDifficulty || "Not set";
+
+    document.getElementById("status-batch-score").textContent =
+      `${batchCorrect} / ${batchTotalAnswered}`;
+
+    document.getElementById("status-overall-score").textContent =
+      `${overallCorrect} / ${overallTotal}`;
+  }
+
+  /* -----------------------------
+     PART 4 — EVENT LISTENERS
+  ----------------------------- */
+
+  document.getElementById("difficulty-select").addEventListener("click", e => {
+    const diff = e.target.dataset.diff;
+    if (!diff) return;
+
+    currentDifficulty = diff;
+    document.getElementById("difficulty-select").style.display = "none";
+    document.getElementById("question-container").style.display = "block";
+
+    loadNextQuestion();
+  });
+
+  document.getElementById("choices-list").addEventListener("click", e => {
+    if (currentChoicesLocked) return;
+
+    const li = e.target.closest(".choice");
+    if (!li) return;
+
+    document.querySelectorAll(".choice").forEach(c => {
+      c.classList.remove("selected");
+      c.querySelector("input").checked = false;
+    });
+
+    li.classList.add("selected");
+    li.querySelector("input").checked = true;
+  });
+
+  document.getElementById("btn-submit").onclick = submitAnswer;
+
+  document.getElementById("btn-next").onclick = () => {
+    if (!currentChoicesLocked) return;
+    loadNextQuestion();
+  };
+
+  document.getElementById("btn-hint").onclick = () => {
+    const box = document.getElementById("hint-box");
+    box.style.display = "block";
+    box.textContent = "Hint: " + currentQuestion.hint;
+  };
+});
+</script>
+</body>
+</html>
