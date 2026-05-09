@@ -921,6 +921,8 @@ function showBatchSummary() {
     batchCorrect = 0;
     batchTotalAnswered = 0;
 
+    usedQuestions = new Set();
+
     container.style.display = "none";
     document.getElementById("question-container").style.display = "block";
 
