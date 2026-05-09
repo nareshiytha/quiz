@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentDifficulty = null;
   let batchQuestionCount = 0;
-  const BATCH_SIZE = 5; // You can change this to 10 or 50 if you want longer batches
+  const BATCH_SIZE = 5; 
 
   let batchCorrect = 0;
   let batchTotalAnswered = 0;
@@ -139,19 +139,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* -----------------------------
      PART 2 — PROCEDURAL MATH GENERATOR
-     (Generates custom equations on the fly, NO API NEEDED)
+     (NO API NEEDED)
   ----------------------------- */
 
   async function generateMathQuestion(difficulty) {
     return new Promise(resolve => {
-      // Simulate a tiny 300ms network delay for smooth UI transition
       setTimeout(() => {
         let stem, correct, wrong1, wrong2, wrong3, explanation, hint, standardTag;
 
         if (difficulty === "harder") {
-          // NC MATH 2 "HARDER": Solve Quadratic Equations (x^2 - C = 0)
-          const a = Math.floor(Math.random() * 12) + 2; // Random number 2 through 13
-          const square = a * a; // Creates a perfect square
+          const a = Math.floor(Math.random() * 12) + 2; 
+          const square = a * a; 
           
           standardTag = "NC.M2.A-REI.4 (Quadratics)";
           stem = `Solve for x (assuming x is positive): x² - ${square} = 0`;
@@ -163,9 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
           explanation = `Add ${square} to both sides to get x² = ${square}. The square root of ${square} is ${a}.`;
           
         } else {
-          // NC MATH 2 "HARD": Multi-step Linear Equations (ax + b = c)
           const multiplier = Math.floor(Math.random() * 5) + 2; 
-          const x = Math.floor(Math.random() * 10) + 1; // The actual answer
+          const x = Math.floor(Math.random() * 10) + 1; 
           const b = Math.floor(Math.random() * 20) + 1; 
           const c = (multiplier * x) + b; 
           
@@ -174,17 +171,15 @@ document.addEventListener("DOMContentLoaded", () => {
           correct = `${x}`;
           wrong1 = `${x + 1}`;
           wrong2 = `${x - 2}`;
-          wrong3 = `${Math.floor(c / multiplier)}`; // Common student mistake
+          wrong3 = `${Math.floor(c / multiplier)}`; 
           hint = `First subtract ${b} from both sides, then divide by ${multiplier}.`;
           explanation = `Subtract ${b} to get ${multiplier}x = ${c - b}. Then divide both sides by ${multiplier} to find x = ${x}.`;
         }
 
-        // Shuffle the choices
         let choices = [correct, wrong1, wrong2, wrong3].map(String);
         choices = choices.sort(() => Math.random() - 0.5); 
         const answerIndex = choices.indexOf(String(correct));
 
-        // Build the final question object
         const newQuestion = {
           id: "gen_" + Math.floor(Math.random() * 1000000), 
           standardTag: standardTag, 
@@ -245,11 +240,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateStatus();
     
-    // Show user that generation is happening
     const btnNext = document.getElementById("btn-next");
     btnNext.textContent = "Loading...";
 
-    // Dynamically GENERATE next question
     let q = await generateMathQuestion(currentDifficulty);
     
     batchQuestionCount++;
@@ -313,7 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const pct = batchTotalAnswered === 0 ? 0 : Math.round((batchCorrect / batchTotalAnswered) * 100);
 
     let oldDiff = currentDifficulty;
-    // Difficulty logic adaptation
     if (pct >= 80 && currentDifficulty === "hard") currentDifficulty = "harder";
     else if (pct < 50 && currentDifficulty === "harder") currentDifficulty = "hard";
 
