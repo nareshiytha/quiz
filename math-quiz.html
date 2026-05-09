@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NC Math 2 Adaptive Quiz (Hard Mode)</title>
+  <title>NC Math 2 Adaptive Quiz (Full Curriculum)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -139,84 +139,176 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentChoicesLocked = false;
 
   /* -----------------------------
-     PART 2 — ADVANCED MATH GENERATOR
+     PART 2 — EXPANDED NC MATH 2 GENERATOR
   ----------------------------- */
 
   async function generateMathQuestion(difficulty) {
     return new Promise(resolve => {
       setTimeout(() => {
         let stem, correct, wrong1, wrong2, wrong3, explanation, hint, standardTag;
+        
+        // Randomly select a topic within the difficulty tier
+        let topicSelector = Math.random();
 
         if (difficulty === "hardest") {
-          // HARDEST: Systems of Linear Equations
-          const x = Math.floor(Math.random() * 10) - 5; // Target x: -5 to 4
-          const y = Math.floor(Math.random() * 10) - 5; // Target y: -5 to 4
-          
-          const a = Math.floor(Math.random() * 4) + 2; // Coeff 2 to 5
-          const b = Math.floor(Math.random() * 4) + 2; 
-          const c = (a * x) + (b * y); 
-          
-          let d, e;
-          do {
-            d = Math.floor(Math.random() * 4) + 2;
-            e = Math.floor(Math.random() * 4) - 5; // Negative coeff for variety
-          } while (a * e === b * d); // Ensure the lines aren't parallel
+          if (topicSelector < 0.33) {
+            // TOPIC: Systems of Equations
+            const x = Math.floor(Math.random() * 10) - 5; 
+            const y = Math.floor(Math.random() * 10) - 5; 
+            const a = Math.floor(Math.random() * 4) + 2; 
+            const b = Math.floor(Math.random() * 4) + 2; 
+            const c = (a * x) + (b * y); 
+            let d, e;
+            do {
+              d = Math.floor(Math.random() * 4) + 2;
+              e = Math.floor(Math.random() * 4) - 5; 
+            } while (a * e === b * d); 
+            const f = (d * x) + (e * y);
+            
+            standardTag = "NC.M2.A-REI.7 (Systems of Equations)";
+            stem = `Solve the system of equations:<br>1) ${a}x + ${b}y = ${c}<br>2) ${d}x ${e < 0 ? '- ' + Math.abs(e) : '+ ' + e}y = ${f}`;
+            correct = `x = ${x}, y = ${y}`;
+            wrong1 = `x = ${x + 1}, y = ${y - 1}`;
+            wrong2 = `x = ${y}, y = ${x}`;
+            wrong3 = `x = ${x - 2}, y = ${y + 2}`;
+            if (x === y) wrong2 = `x = ${x + 2}, y = ${y - 2}`;
 
-          const f = (d * x) + (e * y);
-          
-          standardTag = "NC.M2.A-REI.7 (Systems of Equations)";
-          // Using <br> to stack the equations nicely
-          stem = `Solve the system of equations:<br>1) ${a}x + ${b}y = ${c}<br>2) ${d}x ${e < 0 ? '- ' + Math.abs(e) : '+ ' + e}y = ${f}`;
-          correct = `x = ${x}, y = ${y}`;
-          wrong1 = `x = ${x + 1}, y = ${y - 1}`;
-          wrong2 = `x = ${y}, y = ${x}`;
-          wrong3 = `x = ${x - 2}, y = ${y + 2}`;
-          
-          // Failsafe in case x and y are the same number (would make wrong2 identical to correct)
-          if (x === y) wrong2 = `x = ${x + 2}, y = ${y - 2}`;
+            hint = "Try using the elimination method or substitution.";
+            explanation = `By solving the system, the two lines intersect exactly at x = ${x} and y = ${y}.`;
 
-          hint = "Try using the elimination method by multiplying one of the equations, or isolate a variable to use substitution.";
-          explanation = `By solving the system, the two lines intersect exactly at x = ${x} and y = ${y}.`;
+          } else if (topicSelector < 0.66) {
+            // TOPIC: Right Triangle Trigonometry (Geometry)
+            const triples = [[3,4,5], [5,12,13], [8,15,17], [7,24,25]];
+            const t = triples[Math.floor(Math.random() * triples.length)];
+            const isSin = Math.random() < 0.5;
+            
+            standardTag = "NC.M2.G-SRT.8 (Trigonometry)";
+            stem = `In a right triangle, the legs have lengths ${t[0]} and ${t[1]}, and the hypotenuse is ${t[2]}. What is the ${isSin ? 'sine' : 'cosine'} of the angle opposite the side with length ${t[0]}?`;
+            correct = isSin ? `${t[0]}/${t[2]}` : `${t[1]}/${t[2]}`;
+            wrong1 = isSin ? `${t[1]}/${t[2]}` : `${t[0]}/${t[2]}`;
+            wrong2 = `${t[0]}/${t[1]}`;
+            wrong3 = `${t[1]}/${t[0]}`;
+            hint = "Remember SOH CAH TOA.";
+            explanation = isSin ? `Sine is Opposite / Hypotenuse. The opposite side is ${t[0]} and hypotenuse is ${t[2]}.` : `Cosine is Adjacent / Hypotenuse. The adjacent side is ${t[1]} and hypotenuse is ${t[2]}.`;
+          
+          } else {
+            // TOPIC: Quadratic Discriminants
+            const a = Math.floor(Math.random() * 3) + 1;
+            const b = Math.floor(Math.random() * 6) - 3;
+            const c = Math.floor(Math.random() * 5) + 1;
+            const disc = (b*b) - (4*a*c);
+            let ans, w1, w2, w3;
+            
+            if (disc > 0) { ans = "2 real solutions"; w1 = "1 real solution"; w2 = "2 complex solutions"; w3 = "0 solutions"; }
+            else if (disc === 0) { ans = "1 real solution"; w1 = "2 real solutions"; w2 = "2 complex solutions"; w3 = "Infinite solutions"; }
+            else { ans = "2 complex solutions"; w1 = "2 real solutions"; w2 = "1 real solution"; w3 = "0 solutions"; }
+            
+            standardTag = "NC.M2.A-REI.4 (Quadratic Discriminant)";
+            let bStr = b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`;
+            stem = `How many and what type of solutions does the equation ${a}x² ${bStr}x + ${c} = 0 have?`;
+            correct = ans; wrong1 = w1; wrong2 = w2; wrong3 = w3;
+            hint = "Calculate the discriminant: b² - 4ac";
+            explanation = `The discriminant is (${b})² - 4(${a})(${c}) = ${disc}. Because it is ${disc > 0 ? 'positive' : (disc === 0 ? 'zero' : 'negative')}, there are ${ans}.`;
+          }
 
         } else if (difficulty === "harder") {
-          // HARDER: Factoring Quadratics (x^2 + bx + c = 0)
-          const r1 = Math.floor(Math.random() * 8) - 4; // Root 1: -4 to 3
-          let r2;
-          do { r2 = Math.floor(Math.random() * 8) - 4; } while (r1 === r2); // Ensure unique roots
+          if (topicSelector < 0.33) {
+            // TOPIC: Factoring Quadratics
+            const r1 = Math.floor(Math.random() * 8) - 4; 
+            let r2;
+            do { r2 = Math.floor(Math.random() * 8) - 4; } while (r1 === r2); 
+            
+            const B = -(r1 + r2);
+            const C = r1 * r2;
+            let bStr = B === 0 ? "" : (B === 1 ? "+ x " : (B === -1 ? "- x " : (B > 0 ? `+ ${B}x ` : `- ${Math.abs(B)}x `)));
+            let cStr = C === 0 ? "" : (C > 0 ? `+ ${C}` : `- ${Math.abs(C)}`);
+            
+            standardTag = "NC.M2.A-REI.4 (Factoring Quadratics)";
+            stem = `Solve for x: x² ${bStr}${cStr} = 0`;
+            correct = `x = ${r1}, x = ${r2}`;
+            wrong1 = `x = ${-r1}, x = ${-r2}`;
+            wrong2 = `x = ${r1 + 1}, x = ${r2 - 1}`;
+            wrong3 = `x = ${r2}, x = ${r2}`; 
+            hint = `Find two numbers that multiply to ${C} and add to ${B}.`;
+            explanation = `The equation factors perfectly to (x - ${r1})(x - ${r2}) = 0, meaning the roots are ${r1} and ${r2}.`;
+            
+          } else if (topicSelector < 0.66) {
+            // TOPIC: Multiplying Polynomials (FOIL)
+            const a = Math.floor(Math.random() * 5) + 1;
+            const b = Math.floor(Math.random() * 5) + 1;
+            const aSign = Math.random() < 0.5 ? 1 : -1;
+            const bSign = Math.random() < 0.5 ? 1 : -1;
+            const aVal = a * aSign;
+            const bVal = b * bSign;
+            const mid = aVal + bVal;
+            const last = aVal * bVal;
+            
+            let midStr = mid === 0 ? "" : (mid > 0 ? `+ ${mid}x ` : `- ${Math.abs(mid)}x `);
+            let midStrWrong = mid === 0 ? "" : (mid < 0 ? `+ ${Math.abs(mid)}x ` : `- ${mid}x `);
+            let lastStr = last > 0 ? `+ ${last}` : `- ${Math.abs(last)}`;
+            let lastStrWrong = last < 0 ? `+ ${Math.abs(last)}` : `- ${last}`;
+            
+            standardTag = "NC.M2.A-APR.1 (Polynomial Operations)";
+            stem = `Expand the expression: (x ${aVal > 0 ? '+' : '-'} ${Math.abs(aVal)})(x ${bVal > 0 ? '+' : '-'} ${Math.abs(bVal)})`;
+            correct = `x² ${midStr}${lastStr}`;
+            wrong1 = `x² ${midStrWrong}${lastStrWrong}`;
+            wrong2 = `x² ${lastStr}`;
+            wrong3 = `x² ${midStrWrong}${lastStr}`;
+            hint = "Use the FOIL method: Multiply First, Outer, Inner, and Last terms.";
+            explanation = `Multiply to get x² + ${bVal}x + ${aVal}x + (${last}), which simplifies to x² ${midStr}${lastStr}.`;
           
-          const B = -(r1 + r2);
-          const C = r1 * r2;
+          } else {
+            // TOPIC: Probability
+            const red = Math.floor(Math.random() * 5) + 2;
+            const blue = Math.floor(Math.random() * 5) + 2;
+            const green = Math.floor(Math.random() * 5) + 2;
+            const total = red + blue + green;
+            
+            standardTag = "NC.M2.S-CP.1 (Probability)";
+            stem = `A bag contains ${red} red marbles, ${blue} blue marbles, and ${green} green marbles. If you pick one marble at random, what is the probability it is NOT blue?`;
+            correct = `${red + green}/${total}`;
+            wrong1 = `${blue}/${total}`;
+            wrong2 = `${red}/${total}`;
+            wrong3 = `${red + green}/${total - 1}`;
+            hint = "Find the total number of marbles, then count how many are NOT blue.";
+            explanation = `There are ${total} total marbles. ${red + green} of them are not blue (red and green). The probability is ${red + green}/${total}.`;
+          }
 
-          // Formatting the equation to look natural (e.g. avoiding "+ -3x")
-          let bStr = B === 0 ? "" : (B === 1 ? "+ x " : (B === -1 ? "- x " : (B > 0 ? `+ ${B}x ` : `- ${Math.abs(B)}x `)));
-          let cStr = C === 0 ? "" : (C > 0 ? `+ ${C}` : `- ${Math.abs(C)}`);
-          
-          standardTag = "NC.M2.A-REI.4 (Factoring Quadratics)";
-          stem = `Solve for x: x² ${bStr}${cStr} = 0`;
-          correct = `x = ${r1}, x = ${r2}`;
-          wrong1 = `x = ${-r1}, x = ${-r2}`;
-          wrong2 = `x = ${r1 + 1}, x = ${r2 - 1}`;
-          wrong3 = `x = ${r2}, x = ${r2}`; // Trick answer
-          hint = `Find two numbers that multiply to ${C} and add to ${B}.`;
-          explanation = `The equation factors perfectly to (x - ${r1})(x - ${r2}) = 0, meaning the roots are ${r1} and ${r2}.`;
-          
         } else {
-          // HARD: Multi-step Linear Equations
-          const multiplier = Math.floor(Math.random() * 5) + 2; 
-          const x = Math.floor(Math.random() * 10) + 1; 
-          const b = Math.floor(Math.random() * 20) + 1; 
-          const c = (multiplier * x) + b; 
+          if (topicSelector < 0.5) {
+            // TOPIC: Multi-step Linear Equations
+            const multiplier = Math.floor(Math.random() * 5) + 2; 
+            const x = Math.floor(Math.random() * 10) + 1; 
+            const b = Math.floor(Math.random() * 20) + 1; 
+            const c = (multiplier * x) + b; 
+            
+            standardTag = "NC.M2.A-CED.1 (Linear Equations)";
+            stem = `Solve for x: ${multiplier}x + ${b} = ${c}`;
+            correct = `${x}`;
+            wrong1 = `${x + 1}`;
+            wrong2 = `${x - 2}`;
+            wrong3 = `${Math.floor(c / multiplier)}`; 
+            hint = `First subtract ${b} from both sides, then divide by ${multiplier}.`;
+            explanation = `Subtract ${b} to get ${multiplier}x = ${c - b}. Then divide both sides by ${multiplier} to find x = ${x}.`;
           
-          standardTag = "NC.M2.A-CED.1 (Linear Equations)";
-          stem = `Solve for x: ${multiplier}x + ${b} = ${c}`;
-          correct = `${x}`;
-          wrong1 = `${x + 1}`;
-          wrong2 = `${x - 2}`;
-          wrong3 = `${Math.floor(c / multiplier)}`; 
-          hint = `First subtract ${b} from both sides, then divide by ${multiplier}.`;
-          explanation = `Subtract ${b} to get ${multiplier}x = ${c - b}. Then divide both sides by ${multiplier} to find x = ${x}.`;
+          } else {
+            // TOPIC: Geometry (Triangle Angles)
+            const a = Math.floor(Math.random() * 40) + 30;
+            const b = Math.floor(Math.random() * 40) + 30;
+            const c = 180 - a - b;
+            
+            standardTag = "NC.M2.G-CO.10 (Triangle Angles)";
+            stem = `Two interior angles of a triangle measure ${a}° and ${b}°. What is the measure of the third angle?`;
+            correct = `${c}°`;
+            wrong1 = `${c + 10}°`;
+            wrong2 = `${180 - a}°`;
+            wrong3 = `${90 - Math.min(a,b)}°`;
+            hint = "The sum of all interior angles in any triangle is exactly 180°.";
+            explanation = `Subtract the known angles from 180: 180° - ${a}° - ${b}° = ${c}°.`;
+          }
         }
 
+        // Shuffle the choices
         let choices = [correct, wrong1, wrong2, wrong3].map(String);
         choices = choices.sort(() => Math.random() - 0.5); 
         const answerIndex = choices.indexOf(String(correct));
@@ -247,8 +339,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("question-standard").textContent = q.standardTag;
     document.getElementById("question-difficulty").textContent = q.difficulty;
-    
-    // Using innerHTML here so our <br> tags format correctly
     document.getElementById("question-stem").innerHTML = q.stem;
 
     const list = document.getElementById("choices-list");
@@ -350,7 +440,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let oldDiff = currentDifficulty;
     
-    // NEW ADAPTIVE LOGIC (3 Tiers)
     if (pct >= 80) {
       if (currentDifficulty === "hard") currentDifficulty = "harder";
       else if (currentDifficulty === "harder") currentDifficulty = "hardest";
