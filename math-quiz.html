@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentDifficulty = null;
   let batchQuestionCount = 0;
-  const BATCH_SIZE = 5; // Set to 5 for quick testing. Change back to 50 if desired.
+  const BATCH_SIZE = 5; // Set to 5 for quick testing. Change to 50 if desired.
 
   let batchCorrect = 0;
   let batchTotalAnswered = 0;
@@ -149,45 +149,61 @@ document.addEventListener("DOMContentLoaded", () => {
     return txt.value;
   }
 
-  // Fetch from Open Trivia Math API
+  // Fetch from Open Trivia Math API (With Duplicate Prevention)
   async function fetchQuestionFromAPI(difficulty) {
-    // OpenTDB accepts "medium" and "hard"
     const apiDiff = difficulty === "harder" ? "hard" : "medium";
     const url = `https://opentdb.com/api.php?amount=1&category=19&difficulty=${apiDiff}&type=multiple`;
 
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
+    let attempts = 0;
+    const maxAttempts = 5; // Prevent infinite loading if the API runs completely out of questions
 
-      if (data.results && data.results.length > 0) {
-        const q = data.results[0];
+    while (attempts < maxAttempts) {
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-        // Combine and shuffle choices
-        let choices = [...q.incorrect_answers, q.correct_answer];
-        choices = choices.sort(() => Math.random() - 0.5); 
-        
-        // Find correct answer index post-shuffle
-        const answerIndex = choices.indexOf(q.correct_answer);
+        if (data.results && data.results.length > 0) {
+          const q = data.results[0];
+          const decodedStem = decodeHTML(q.question);
 
-        const newQuestion = {
-          id: "API_" + Math.floor(Math.random() * 1000000),
-          standardTag: "General Math", 
-          difficulty: difficulty,
-          stem: decodeHTML(q.question),
-          choices: choices.map(decodeHTML),
-          answerIndex: answerIndex,
-          hint: "Read the question carefully and eliminate obvious wrong answers.",
-          explanation: `The correct answer is ${decodeHTML(q.correct_answer)}.`
-        };
-        
-        usedQuestions.add(newQuestion.id);
-        return newQuestion;
+          // Check if we have already used this exact question text
+          if (usedQuestions.has(decodedStem)) {
+            console.log("Duplicate found from API. Fetching another...");
+            attempts++;
+            continue; // Skip the rest of the loop and fetch a new one
+          }
+
+          // Combine and shuffle choices
+          let choices = [...q.incorrect_answers, q.correct_answer];
+          choices = choices.sort(() => Math.random() - 0.5); 
+          
+          // Find correct answer index post-shuffle
+          const answerIndex = choices.indexOf(q.correct_answer);
+
+          const newQuestion = {
+            id: decodedStem, // Use the actual text as the ID
+            standardTag: "General Math", 
+            difficulty: difficulty,
+            stem: decodedStem,
+            choices: choices.map(decodeHTML),
+            answerIndex: answerIndex,
+            hint: "Read the question carefully and eliminate obvious wrong answers.",
+            explanation: `The correct answer is ${decodeHTML(q.correct_answer)}.`
+          };
+          
+          // Add the exact text to our memory so it never repeats
+          usedQuestions.add(decodedStem); 
+          return newQuestion;
+        }
+      } catch (error) {
+        console.error("Failed to fetch from internet:", error);
+        break; // Stop trying if the internet disconnects
       }
-    } catch (error) {
-      console.error("Failed to fetch from internet:", error);
+      attempts++;
     }
     
-    return null;
+    // Returns null if we couldn't find a unique question after 5 tries
+    return null; 
   }
 
   /* -----------------------------
@@ -242,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let q = await fetchQuestionFromAPI(currentDifficulty);
     
     if (!q) {
-      alert("No questions available from the server. Please check your connection or wait a moment.");
+      alert("No unique questions available from the server right now. Please check your connection or wait a moment.");
       btnNext.textContent = "Next";
       return;
     }
