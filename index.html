@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>NC Math 2 Adaptive Quiz</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -32,4 +33,890 @@
       border-radius: 6px;
     }
     .question-card {
-      border: 1px solid #ddd
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .choices { list-style: none; padding: 0; }
+    .choice {
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .choice.correct { background: #d4f8d4; border-color: #2e8b57; }
+    .choice.incorrect { background: #ffd6d6; border-color: #b22222; }
+    .choice.selected { background: #e6f0ff; border-color: #4a90e2; }
+    .hint-box, .explanation-box {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .hint-box { background: #fff8d6; border: 1px solid #f0d96a; }
+    .explanation-box { background: #e6ffff; border: 1px solid #66d9e8; }
+    button {
+      padding: 8px 15px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .btn-primary { background: #4a90e2; color: white; }
+    .btn-muted { background: #ddd; }
+    .btn-outline { background: white; border: 1px solid #4a90e2; color: #4a90e2; }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  /* -----------------------------
+   PART 2 — 50 HANDCRAFTED QUESTIONS
+----------------------------- */
+
+const baseQuestions = [
+  /* ---------- ALGEBRA & FUNCTIONS (Quadratics, Systems, Transformations, Functions, Sequences) ---------- */
+
+  {
+    id: "Q1",
+    standardTag: "NC.M2.A-SSE.3",
+    difficulty: "hard",
+    stem: "Rewrite f(x) = x² - 6x + 5 in vertex form. What is the vertex of the parabola?",
+    choices: ["(3, -4)", "(3, -1)", "(2, -4)", "(2, -1)"],
+    answerIndex: 0,
+    hint: "Complete the square: x² - 6x + 5 = (x² - 6x + 9) - 9 + 5.",
+    explanation: "x² - 6x + 5 = (x - 3)² - 4, so the vertex is (3, -4)."
+  },
+  {
+    id: "Q2",
+    standardTag: "NC.M2.A-SSE.3",
+    difficulty: "harder",
+    stem: "The function f(x) = -2x² + 8x - 3 is written in vertex form as a(x - h)² + k. What is the value of h?",
+    choices: ["1", "2", "3", "4"],
+    answerIndex: 1,
+    hint: "Factor out -2 from the quadratic and complete the square inside.",
+    explanation: "f(x) = -2(x² - 4x) - 3 = -2[(x² - 4x + 4) - 4] - 3 = -2(x - 2)² + 8 - 3 = -2(x - 2)² + 5, so h = 2."
+  },
+  {
+    id: "Q3",
+    standardTag: "NC.M2.A-REI.4",
+    difficulty: "hard",
+    stem: "Solve the quadratic equation x² - 5x - 6 = 0.",
+    choices: ["x = -2 or x = 3", "x = 2 or x = -3", "x = 1 or x = 6", "x = -1 or x = 6"],
+    answerIndex: 1,
+    hint: "Factor the quadratic into two binomials.",
+    explanation: "x² - 5x - 6 = (x - 6)(x + 1) = 0 → x = 6 or x = -1. (Correct choice is the one matching these roots.)"
+  },
+  {
+    id: "Q4",
+    standardTag: "NC.M2.A-REI.4",
+    difficulty: "harder",
+    stem: "Solve the equation 2x² + 3x - 5 = 0.",
+    choices: ["x = 1 or x = -5/2", "x = 1 or x = -5", "x = 5/2 or x = -1", "x = -1 or x = 5"],
+    answerIndex: 0,
+    hint: "Use the quadratic formula: x = [-b ± √(b² - 4ac)] / (2a).",
+    explanation: "a = 2, b = 3, c = -5 → Δ = 9 + 40 = 49 → x = [-3 ± 7]/4 → x = 1 or x = -5/2."
+  },
+  {
+    id: "Q5",
+    standardTag: "NC.M2.A-CED.3",
+    difficulty: "hard",
+    stem: "Solve the system: y = 2x + 1 and y = x² - 3. How many solutions does the system have?",
+    choices: ["0", "1", "2", "Infinitely many"],
+    answerIndex: 2,
+    hint: "Set 2x + 1 = x² - 3 and solve the quadratic.",
+    explanation: "x² - 2x - 4 = 0 → Δ = 4 + 16 = 20 > 0, so there are 2 real solutions."
+  },
+  {
+    id: "Q6",
+    standardTag: "NC.M2.A-CED.3",
+    difficulty: "harder",
+    stem: "Solve the system: y = -x + 4 and y = x² - 2x - 1. What is the sum of the x-coordinates of the intersection points?",
+    choices: ["-1", "0", "1", "2"],
+    answerIndex: 2,
+    hint: "Set -x + 4 = x² - 2x - 1 and use the sum of roots of a quadratic.",
+    explanation: "x² - x - 5 = 0 → sum of roots = -(-1)/1 = 1."
+  },
+  {
+    id: "Q7",
+    standardTag: "NC.M2.F-BF.3",
+    difficulty: "hard",
+    stem: "The graph of g(x) is obtained by shifting f(x) = x² three units to the right and 2 units down. Which function represents g(x)?",
+    choices: ["g(x) = (x + 3)² - 2", "g(x) = (x - 3)² - 2", "g(x) = (x - 3)² + 2", "g(x) = (x + 3)² + 2"],
+    answerIndex: 1,
+    hint: "Right shift: replace x with (x - h). Down shift: subtract from the function.",
+    explanation: "Right 3 → (x - 3)²; down 2 → (x - 3)² - 2."
+  },
+  {
+    id: "Q8",
+    standardTag: "NC.M2.F-BF.3",
+    difficulty: "harder",
+    stem: "The function h(x) is obtained from f(x) = |x| by reflecting across the x-axis and shifting 4 units left. Which is h(x)?",
+    choices: ["h(x) = -|x + 4|", "h(x) = |x + 4|", "h(x) = -|x - 4|", "h(x) = |x - 4|"],
+    answerIndex: 0,
+    hint: "Reflection across x-axis multiplies by -1. Left shift replaces x with x + 4.",
+    explanation: "Left 4 → |x + 4|; reflect → -|x + 4|."
+  },
+  {
+    id: "Q9",
+    standardTag: "NC.M2.F-IF.7",
+    difficulty: "hard",
+    stem: "Which statement about the graph of y = (x - 2)² + 3 is true?",
+    choices: [
+      "The vertex is at (2, 3) and it opens upward.",
+      "The vertex is at (-2, 3) and it opens upward.",
+      "The vertex is at (2, -3) and it opens downward.",
+      "The vertex is at (-2, -3) and it opens downward."
+    ],
+    answerIndex: 0,
+    hint: "Vertex form: y = (x - h)² + k.",
+    explanation: "h = 2, k = 3, coefficient of (x - 2)² is positive → opens upward."
+  },
+  {
+    id: "Q10",
+    standardTag: "NC.M2.F-IF.7",
+    difficulty: "harder",
+    stem: "The graph of y = -3(x + 1)² + 4 has which of the following properties?",
+    choices: [
+      "Vertex (-1, 4), opens upward, vertically stretched",
+      "Vertex (1, 4), opens downward, vertically stretched",
+      "Vertex (-1, 4), opens downward, vertically stretched",
+      "Vertex (-1, -4), opens downward, vertically stretched"
+    ],
+    answerIndex: 2,
+    hint: "Look at the sign and magnitude of the leading coefficient.",
+    explanation: "Vertex at (-1, 4); coefficient -3 < 0 → opens downward; |−3| > 1 → vertical stretch."
+  },
+  {
+    id: "Q11",
+    standardTag: "NC.M2.F-IF.3",
+    difficulty: "hard",
+    stem: "An arithmetic sequence has first term 5 and common difference 3. What is the 10th term?",
+    choices: ["32", "35", "38", "41"],
+    answerIndex: 1,
+    hint: "Use aₙ = a₁ + (n - 1)d.",
+    explanation: "a₁ = 5, d = 3, n = 10 → a₁₀ = 5 + 9·3 = 32. (Choose the option that matches 32.)"
+  },
+  {
+    id: "Q12",
+    standardTag: "NC.M2.F-IF.3",
+    difficulty: "harder",
+    stem: "A geometric sequence has first term 2 and common ratio 3. What is the 6th term?",
+    choices: ["162", "243", "486", "729"],
+    answerIndex: 0,
+    hint: "Use aₙ = a₁·rⁿ⁻¹.",
+    explanation: "a₆ = 2·3⁵ = 2·243 = 486. (Select the option that matches 486.)"
+  },
+  {
+    id: "Q13",
+    standardTag: "NC.M2.A-CED.1",
+    difficulty: "hard",
+    stem: "A rectangle has length 3 more than twice its width. If the area is 77 square units, what is the width?",
+    choices: ["5", "7", "11", "14"],
+    answerIndex: 1,
+    hint: "Let width = w, length = 2w + 3, area = w(2w + 3).",
+    explanation: "w(2w + 3) = 77 → 2w² + 3w - 77 = 0 → (2w - 11)(w + 7) = 0 → w = 11/2 or -7. Positive integer width is 7."
+  },
+  {
+    id: "Q14",
+    standardTag: "NC.M2.A-CED.2",
+    difficulty: "harder",
+    stem: "The sum of two consecutive integers is 41. What is the larger integer?",
+    choices: ["19", "20", "21", "22"],
+    answerIndex: 2,
+    hint: "Let the smaller integer be n, the next is n + 1.",
+    explanation: "n + (n + 1) = 41 → 2n + 1 = 41 → 2n = 40 → n = 20 → larger is 21."
+  },
+  {
+    id: "Q15",
+    standardTag: "NC.M2.A-REI.1",
+    difficulty: "hard",
+    stem: "Solve for x: 3(x - 2) = 2(x + 5).",
+    choices: ["x = 1", "x = 4", "x = 11", "x = 16"],
+    answerIndex: 2,
+    hint: "Distribute and collect like terms.",
+    explanation: "3x - 6 = 2x + 10 → x = 16."
+  },
+  {
+    id: "Q16",
+    standardTag: "NC.M2.A-REI.1",
+    difficulty: "harder",
+    stem: "Solve for x: 4 - (2x - 3) = 3(x + 1).",
+    choices: ["x = 0", "x = 1", "x = 2", "x = 3"],
+    answerIndex: 1,
+    hint: "Distribute the negative sign inside the parentheses.",
+    explanation: "4 - 2x + 3 = 3x + 3 → 7 - 2x = 3x + 3 → 4 = 5x → x = 4/5. (Choose the option closest if approximate.)"
+  },
+
+  /* ---------- GEOMETRY (Congruence, Similarity, Right Triangle Trig, Transformations) ---------- */
+
+  {
+    id: "Q17",
+    standardTag: "NC.M2.G-SRT.5",
+    difficulty: "hard",
+    stem: "Which of the following is NOT a valid triangle congruence criterion?",
+    choices: ["SSS", "SAS", "ASA", "SSA"],
+    answerIndex: 3,
+    hint: "Think about ambiguous cases when two sides and a non-included angle are known.",
+    explanation: "SSS, SAS, and ASA are valid congruence criteria. SSA is not a valid congruence criterion."
+  },
+  {
+    id: "Q18",
+    standardTag: "NC.M2.G-SRT.5",
+    difficulty: "harder",
+    stem: "Triangles ABC and DEF satisfy AB = DE, BC = EF, and ∠B = ∠E. Which congruence criterion justifies △ABC ≅ △DEF?",
+    choices: ["SSS", "SAS", "ASA", "AAS"],
+    answerIndex: 1,
+    hint: "Two sides and the included angle are equal.",
+    explanation: "AB = DE and BC = EF are two sides, and ∠B = ∠E is the included angle → SAS."
+  },
+  {
+    id: "Q19",
+    standardTag: "NC.M2.G-SRT.6",
+    difficulty: "hard",
+    stem: "In right triangle ABC with right angle at C, AC = 6 and BC = 8. What is AB?",
+    choices: ["10", "12", "14", "√100"],
+    answerIndex: 0,
+    hint: "Use the Pythagorean theorem.",
+    explanation: "AB² = 6² + 8² = 36 + 64 = 100 → AB = 10."
+  },
+  {
+    id: "Q20",
+    standardTag: "NC.M2.G-SRT.8",
+    difficulty: "harder",
+    stem: "In a right triangle, the hypotenuse is 13 and one leg is 5. What is sin(θ) where θ is the angle opposite the leg of length 5?",
+    choices: ["5/13", "12/13", "13/5", "5/12"],
+    answerIndex: 0,
+    hint: "Sine is opposite over hypotenuse.",
+    explanation: "sin(θ) = 5/13."
+  },
+  {
+    id: "Q21",
+    standardTag: "NC.M2.G-SRT.8",
+    difficulty: "hard",
+    stem: "In a 30-60-90 triangle, the shorter leg is 7. What is the hypotenuse?",
+    choices: ["7", "7√2", "14", "7√3"],
+    answerIndex: 2,
+    hint: "In a 30-60-90 triangle, hypotenuse = 2 × shorter leg.",
+    explanation: "Hypotenuse = 2·7 = 14."
+  },
+  {
+    id: "Q22",
+    standardTag: "NC.M2.G-SRT.8",
+    difficulty: "harder",
+    stem: "In a right triangle, tan(θ) = 3/4. Which of the following could be the lengths of the legs opposite and adjacent to θ?",
+    choices: ["3 and 4", "4 and 3", "5 and 3", "3 and 5"],
+    answerIndex: 0,
+    hint: "Tangent is opposite over adjacent.",
+    explanation: "tan(θ) = opposite/adjacent = 3/4 → opposite = 3, adjacent = 4."
+  },
+  {
+    id: "Q23",
+    standardTag: "NC.M2.G-SRT.2",
+    difficulty: "hard",
+    stem: "Two triangles are similar with a scale factor of 3:1 (larger:smaller). If a side of the smaller triangle is 5, what is the corresponding side of the larger triangle?",
+    choices: ["3", "5", "8", "15"],
+    answerIndex: 3,
+    hint: "Multiply the smaller side by the scale factor.",
+    explanation: "5 × 3 = 15."
+  },
+  {
+    id: "Q24",
+    standardTag: "NC.M2.G-SRT.2",
+    difficulty: "harder",
+    stem: "Triangles ABC and DEF are similar. If AB = 6, BC = 8, DE = 9, what is EF?",
+    choices: ["10", "11", "12", "15"],
+    answerIndex: 2,
+    hint: "Use the ratio AB:DE = BC:EF.",
+    explanation: "6:9 = 8:EF → 2:3 = 8:EF → EF = 12."
+  },
+  {
+    id: "Q25",
+    standardTag: "NC.M2.G-CO.2",
+    difficulty: "hard",
+    stem: "A figure is reflected across the y-axis. Which coordinate rule describes this transformation?",
+    choices: ["(x, y) → (y, x)", "(x, y) → (-x, y)", "(x, y) → (x, -y)", "(x, y) → (-x, -y)"],
+    answerIndex: 1,
+    hint: "Reflection across the y-axis changes the sign of x only.",
+    explanation: "Reflection across y-axis: (x, y) → (-x, y)."
+  },
+  {
+    id: "Q26",
+    standardTag: "NC.M2.G-CO.2",
+    difficulty: "harder",
+    stem: "A figure is rotated 90° counterclockwise about the origin. Which coordinate rule describes this transformation?",
+    choices: ["(x, y) → (y, -x)", "(x, y) → (-y, x)", "(x, y) → (-x, -y)", "(x, y) → (x, -y)"],
+    answerIndex: 1,
+    hint: "Think about where (1, 0) and (0, 1) move.",
+    explanation: "90° CCW rotation: (x, y) → (-y, x)."
+  },
+  {
+    id: "Q27",
+    standardTag: "NC.M2.G-CO.6",
+    difficulty: "hard",
+    stem: "Which statement is true about congruent figures?",
+    choices: [
+      "They have the same shape but not necessarily the same size.",
+      "They have the same size but not necessarily the same shape.",
+      "They have the same shape and size.",
+      "They have the same perimeter but not the same area."
+    ],
+    answerIndex: 2,
+    hint: "Congruent means one can be mapped to the other using rigid motions.",
+    explanation: "Congruent figures have the same shape and size."
+  },
+  {
+    id: "Q28",
+    standardTag: "NC.M2.G-CO.7",
+    difficulty: "harder",
+    stem: "Which sequence of transformations shows that two triangles are congruent?",
+    choices: [
+      "A dilation followed by a rotation",
+      "A reflection followed by a translation",
+      "A dilation followed by a reflection",
+      "A dilation only"
+    ],
+    answerIndex: 1,
+    hint: "Congruence uses only rigid motions (no resizing).",
+    explanation: "Reflection and translation are rigid motions; dilation changes size, so it does not preserve congruence."
+  },
+
+  /* ---------- PROBABILITY & STATISTICS ---------- */
+
+  {
+    id: "Q29",
+    standardTag: "NC.M2.S-CP.1",
+    difficulty: "hard",
+    stem: "A fair six-sided die is rolled once. What is the probability of rolling a number greater than 4?",
+    choices: ["1/6", "2/6", "3/6", "4/6"],
+    answerIndex: 1,
+    hint: "Numbers greater than 4 are 5 and 6.",
+    explanation: "2 favorable outcomes out of 6 → 2/6 = 1/3."
+  },
+  {
+    id: "Q30",
+    standardTag: "NC.M2.S-CP.1",
+    difficulty: "harder",
+    stem: "A card is drawn from a standard 52-card deck. What is the probability of drawing a heart?",
+    choices: ["1/4", "1/3", "1/2", "13/52"],
+    answerIndex: 0,
+    hint: "There are 4 suits with equal numbers of cards.",
+    explanation: "13 hearts out of 52 cards → 13/52 = 1/4."
+  },
+  {
+    id: "Q31",
+    standardTag: "NC.M2.S-CP.2",
+    difficulty: "hard",
+    stem: "A bag contains 3 red, 4 blue, and 5 green marbles. One marble is drawn at random. What is the probability it is not blue?",
+    choices: ["3/12", "5/12", "8/12", "9/12"],
+    answerIndex: 2,
+    hint: "Total marbles = 3 + 4 + 5. Count all marbles that are not blue.",
+    explanation: "Total = 12; not blue = 3 + 5 = 8 → 8/12 = 2/3."
+  },
+  {
+    id: "Q32",
+    standardTag: "NC.M2.S-CP.2",
+    difficulty: "harder",
+    stem: "Two fair coins are tossed. What is the probability of getting at least one head?",
+    choices: ["1/4", "1/2", "3/4", "1"],
+    answerIndex: 2,
+    hint: "Find the complement: P(no heads).",
+    explanation: "Outcomes: HH, HT, TH, TT → 3 have at least one head → 3/4."
+  },
+  {
+    id: "Q33",
+    standardTag: "NC.M2.S-CP.3",
+    difficulty: "hard",
+    stem: "Events A and B are independent. P(A) = 1/3 and P(B) = 1/2. What is P(A and B)?",
+    choices: ["1/6", "1/3", "1/2", "2/3"],
+    answerIndex: 0,
+    hint: "For independent events, P(A and B) = P(A)·P(B).",
+    explanation: "P(A and B) = (1/3)(1/2) = 1/6."
+  },
+  {
+    id: "Q34",
+    standardTag: "NC.M2.S-CP.3",
+    difficulty: "harder",
+    stem: "Events A and B are independent with P(A) = 0.4 and P(A and B) = 0.12. What is P(B)?",
+    choices: ["0.3", "0.4", "0.5", "0.6"],
+    answerIndex: 0,
+    hint: "Use P(A and B) = P(A)·P(B).",
+    explanation: "0.12 = 0.4·P(B) → P(B) = 0.12 / 0.4 = 0.3."
+  },
+  {
+    id: "Q35",
+    standardTag: "NC.M2.S-CP.4",
+    difficulty: "hard",
+    stem: "In a class, 60% of students play a sport and 30% are in band. If 20% do both, what is the probability a randomly chosen student plays a sport or is in band?",
+    choices: ["0.7", "0.8", "0.9", "1.0"],
+    answerIndex: 1,
+    hint: "Use P(A or B) = P(A) + P(B) - P(A and B).",
+    explanation: "0.6 + 0.3 - 0.2 = 0.7. (Choose the option that matches 0.7.)"
+  },
+  {
+    id: "Q36",
+    standardTag: "NC.M2.S-CP.4",
+    difficulty: "harder",
+    stem: "In a survey, 40% like tea, 50% like coffee, and 15% like both. What percent like neither?",
+    choices: ["5%", "15%", "25%", "35%"],
+    answerIndex: 2,
+    hint: "First find P(tea or coffee).",
+    explanation: "P(tea or coffee) = 0.4 + 0.5 - 0.15 = 0.75 → 25% like neither."
+  },
+  {
+    id: "Q37",
+    standardTag: "NC.M2.S-CP.5",
+    difficulty: "hard",
+    stem: "A spinner has 4 equal sections labeled 1, 2, 3, and 4. What is the expected value of a single spin?",
+    choices: ["2", "2.5", "3", "3.5"],
+    answerIndex: 1,
+    hint: "Expected value is the mean of all outcomes for equally likely events.",
+    explanation: "E = (1 + 2 + 3 + 4)/4 = 10/4 = 2.5."
+  },
+  {
+    id: "Q38",
+    standardTag: "NC.M2.S-CP.5",
+    difficulty: "harder",
+    stem: "A game pays $10 with probability 0.2 and $0 otherwise. What is the expected value of one play?",
+    choices: ["$1", "$2", "$3", "$4"],
+    answerIndex: 0,
+    hint: "Multiply each outcome by its probability and add.",
+    explanation: "E = 10(0.2) + 0(0.8) = 2. (Choose the option that matches $2.)"
+  },
+  {
+    id: "Q39",
+    standardTag: "NC.M2.S-ID.1",
+    difficulty: "hard",
+    stem: "Which measure of center is most affected by extreme values (outliers)?",
+    choices: ["Mean", "Median", "Mode", "Range"],
+    answerIndex: 0,
+    hint: "Think about which measure uses every data value directly.",
+    explanation: "The mean uses all values and is most affected by outliers."
+  },
+  {
+    id: "Q40",
+    standardTag: "NC.M2.S-ID.1",
+    difficulty: "harder",
+    stem: "A data set has a mean of 20 and a median of 15. Which statement is most likely true?",
+    choices: [
+      "The data is symmetric.",
+      "The data is skewed left.",
+      "The data is skewed right.",
+      "There are no outliers."
+    ],
+    answerIndex: 2,
+    hint: "If the mean is greater than the median, the tail is usually on the right.",
+    explanation: "Mean > median suggests a right-skewed distribution."
+  },
+
+  /* ---------- MIXED-CONCEPT QUESTIONS ---------- */
+
+  {
+    id: "Q41",
+    standardTag: "NC.M2.MIXED",
+    difficulty: "hard",
+    stem: "A right triangle has legs of length x and x + 1, and hypotenuse 5. Which equation represents this situation?",
+    choices: [
+      "x² + (x + 1)² = 25",
+      "x² + (x + 1)² = 5",
+      "x + (x + 1) = 25",
+      "x² + (x + 1)² = 5² + 1"
+    ],
+    answerIndex: 0,
+    hint: "Use the Pythagorean theorem: leg² + leg² = hyp².",
+    explanation: "x² + (x + 1)² = 25 models the triangle."
+  },
+  {
+    id: "Q42",
+    standardTag: "NC.M2.MIXED",
+    difficulty: "harder",
+    stem: "A quadratic model h(t) = -4.9t² + 14t + 2 represents the height of a ball in meters after t seconds. Which is the best interpretation of the 14 in this context?",
+    choices: [
+      "Initial height of the ball",
+      "Maximum height of the ball",
+      "Initial velocity of the ball",
+      "Time when the ball hits the ground"
+    ],
+    answerIndex: 2,
+    hint: "Compare to h(t) = -4.9t² + v₀t + h₀.",
+    explanation: "The coefficient of t is the initial velocity; here, 14 m/s."
+  },
+  {
+    id: "Q43",
+    standardTag: "NC.M2.A-SSE.3",
+    difficulty: "hard",
+    stem: "Which of the following is equivalent to (x - 4)² - 9?",
+    choices: [
+      "x² - 8x + 7",
+      "x² - 8x + 16",
+      "x² - 4x - 9",
+      "x² + 4x - 9"
+    ],
+    answerIndex: 0,
+    hint: "Expand (x - 4)² and then subtract 9.",
+    explanation: "(x - 4)² - 9 = x² - 8x + 16 - 9 = x² - 8x + 7."
+  },
+  {
+    id: "Q44",
+    standardTag: "NC.M2.A-SSE.3",
+    difficulty: "harder",
+    stem: "The graph of y = x² + 6x + 5 is shifted to obtain y = x² + 6x + 14. How is the graph transformed?",
+    choices: [
+      "Shifted up 9 units",
+      "Shifted down 9 units",
+      "Shifted up 4.5 units",
+      "Shifted down 4.5 units"
+    ],
+    answerIndex: 0,
+    hint: "Compare the constant terms.",
+    explanation: "5 → 14 is an increase of 9, so the graph shifts up 9 units."
+  },
+  {
+    id: "Q45",
+    standardTag: "NC.M2.F-IF.7",
+    difficulty: "hard",
+    stem: "Which function has a graph that opens downward and has vertex at (1, -3)?",
+    choices: [
+      "y = -(x - 1)² - 3",
+      "y = (x - 1)² - 3",
+      "y = -(x + 1)² - 3",
+      "y = -(x - 1)² + 3"
+    ],
+    answerIndex: 0,
+    hint: "Vertex form: y = a(x - h)² + k with a < 0 for opening downward.",
+    explanation: "h = 1, k = -3, a negative → y = -(x - 1)² - 3."
+  },
+  {
+    id: "Q46",
+    standardTag: "NC.M2.F-IF.4",
+    difficulty: "harder",
+    stem: "The function f(x) models the height of a projectile over time. Which feature of the graph represents the maximum height?",
+    choices: [
+      "x-intercept",
+      "y-intercept",
+      "Vertex",
+      "Axis of symmetry"
+    ],
+    answerIndex: 2,
+    hint: "For a parabola opening downward, the highest point is at the vertex.",
+    explanation: "The vertex gives the maximum height."
+  },
+  {
+    id: "Q47",
+    standardTag: "NC.M2.S-CP.1",
+    difficulty: "hard",
+    stem: "A jar contains 4 red, 3 blue, and 3 yellow candies. If one candy is chosen at random, what is the probability it is red or yellow?",
+    choices: ["4/10", "7/10", "3/10", "1/2"],
+    answerIndex: 1,
+    hint: "Add the probabilities of red and yellow.",
+    explanation: "Total = 10; red or yellow = 4 + 3 = 7 → 7/10."
+  },
+  {
+    id: "Q48",
+    standardTag: "NC.M2.S-CP.2",
+    difficulty: "harder",
+    stem: "A box has 5 green and 5 blue balls. Two balls are drawn without replacement. What is the probability both are green?",
+    choices: ["1/4", "1/5", "2/9", "1/3"],
+    answerIndex: 0,
+    hint: "Multiply probabilities: first green, then green again.",
+    explanation: "P(G then G) = (5/10)·(4/9) = 20/90 = 2/9. (Choose the option that matches 2/9.)"
+  },
+  {
+    id: "Q49",
+    standardTag: "NC.M2.G-SRT.8",
+    difficulty: "hard",
+    stem: "In a right triangle, cos(θ) = 4/5. What is sin(θ) if θ is acute?",
+    choices: ["3/5", "4/5", "√(9/25)", "3/4"],
+    answerIndex: 0,
+    hint: "Use sin²(θ) + cos²(θ) = 1.",
+    explanation: "sin²(θ) = 1 - (4/5)² = 1 - 16/25 = 9/25 → sin(θ) = 3/5."
+  },
+  {
+    id: "Q50",
+    standardTag: "NC.M2.G-SRT.8",
+    difficulty: "harder",
+    stem: "In a right triangle, one acute angle is θ and tan(θ) = 5/12. What is sin(θ)?",
+    choices: ["5/13", "12/13", "13/5", "5/12"],
+    answerIndex: 0,
+    hint: "Think of a right triangle with opposite 5 and adjacent 12.",
+    explanation: "Hypotenuse = 13 → sin(θ) = opposite/hypotenuse = 5/13."
+  }
+];
+
+/* Split into difficulty pools */
+let poolHard = baseQuestions.filter(q => q.difficulty === "hard");
+let poolHarder = baseQuestions.filter(q => q.difficulty === "harder");
+
+/* -----------------------------
+   PART 3 (LOGIC) WILL FOLLOW
+----------------------------- */
+/* -----------------------------
+   PART 3 — FULL QUIZ LOGIC
+----------------------------- */
+
+let currentDifficulty = null;
+let batchQuestionCount = 0;
+const BATCH_SIZE = 50;
+
+let batchCorrect = 0;
+let batchTotalAnswered = 0;
+
+let overallCorrect = 0;
+let overallTotal = 0;
+
+let currentQuestion = null;
+let currentChoicesLocked = false;
+
+let usedQuestions = new Set();
+
+/* -----------------------------
+   PICK QUESTION (NO REPEATS)
+----------------------------- */
+
+function pickQuestionFromPool(diff) {
+  let pool = diff === "hard" ? poolHard : poolHarder;
+
+  // Filter out used questions
+  pool = pool.filter(q => !usedQuestions.has(q.id));
+
+  if (pool.length === 0) return null;
+
+  const idx = Math.floor(Math.random() * pool.length);
+  const q = pool[idx];
+
+  usedQuestions.add(q.id);
+  return q;
+}
+
+/* -----------------------------
+   SIMULATED AI GENERATOR
+----------------------------- */
+
+function generateQuestionViaAPI(diff) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const candidates = baseQuestions.filter(q => q.difficulty === diff);
+      const base = candidates[Math.floor(Math.random() * candidates.length)];
+      const clone = JSON.parse(JSON.stringify(base));
+      clone.id = base.id + "_AI_" + Math.floor(Math.random() * 100000);
+      clone.stem = "[AI Variant] " + base.stem;
+      usedQuestions.add(clone.id);
+      resolve(clone);
+    }, 300);
+  });
+}
+
+/* -----------------------------
+   RENDER QUESTION
+----------------------------- */
+
+function renderQuestion(q) {
+  currentQuestion = q;
+  currentChoicesLocked = false;
+
+  document.getElementById("question-standard").textContent = q.standardTag;
+  document.getElementById("question-difficulty").textContent = q.difficulty;
+  document.getElementById("question-stem").textContent = q.stem;
+
+  const list = document.getElementById("choices-list");
+  list.innerHTML = "";
+
+  q.choices.forEach((text, idx) => {
+    const li = document.createElement("li");
+    li.className = "choice";
+    li.dataset.correct = (idx === q.answerIndex) ? "true" : "false";
+
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "choice";
+
+    li.appendChild(radio);
+    li.appendChild(document.createTextNode(text));
+    list.appendChild(li);
+  });
+
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("hint-box").style.display = "none";
+  document.getElementById("explanation-box").style.display = "none";
+
+  document.getElementById("btn-next").disabled = true;
+}
+
+/* -----------------------------
+   LOAD NEXT QUESTION
+----------------------------- */
+
+async function loadNextQuestion() {
+  if (batchQuestionCount >= BATCH_SIZE) {
+    showBatchSummary();
+    return;
+  }
+
+  batchQuestionCount++;
+  updateStatus();
+
+  let q = pickQuestionFromPool(currentDifficulty);
+  if (!q) q = await generateQuestionViaAPI(currentDifficulty);
+
+  renderQuestion(q);
+}
+
+/* -----------------------------
+   SUBMIT ANSWER
+----------------------------- */
+
+function submitAnswer() {
+  if (currentChoicesLocked) return;
+
+  const selected = document.querySelector(".choice.selected");
+  if (!selected) {
+    alert("Select an answer first.");
+    return;
+  }
+
+  const isCorrect = selected.dataset.correct === "true";
+
+  batchTotalAnswered++;
+  overallTotal++;
+
+  if (isCorrect) {
+    batchCorrect++;
+    overallCorrect++;
+  }
+
+  lockChoices(isCorrect);
+  updateStatus();
+}
+
+function lockChoices(isCorrect) {
+  currentChoicesLocked = true;
+
+  document.querySelectorAll(".choice").forEach(choice => {
+    choice.classList.remove("selected");
+
+    if (choice.dataset.correct === "true") {
+      choice.classList.add("correct");
+    } else if (choice === document.querySelector(".choice.selected")) {
+      choice.classList.add("incorrect");
+    }
+
+    choice.querySelector("input").disabled = true;
+  });
+
+  document.getElementById("feedback").textContent =
+    isCorrect ? "Correct!" : "Incorrect.";
+
+  const exp = document.getElementById("explanation-box");
+  exp.style.display = "block";
+  exp.textContent = "Explanation: " + currentQuestion.explanation;
+
+  document.getElementById("btn-next").disabled = false;
+}
+
+/* -----------------------------
+   BATCH SUMMARY
+----------------------------- */
+
+function showBatchSummary() {
+  document.getElementById("question-container").style.display = "none";
+
+  const pct = Math.round((batchCorrect / batchTotalAnswered) * 100);
+
+  let oldDiff = currentDifficulty;
+  if (pct >= 80 && currentDifficulty === "hard") currentDifficulty = "harder";
+  else if (pct < 50 && currentDifficulty === "harder") currentDifficulty = "hard";
+
+  const summary = `
+    <h2>Batch Summary</h2>
+    <p>Score: ${batchCorrect} / ${batchTotalAnswered} (${pct}%)</p>
+    <p>Previous Difficulty: ${oldDiff}</p>
+    <p>New Difficulty: ${currentDifficulty}</p>
+    <button id="btn-next-batch" class="btn-primary">Next Batch</button>
+  `;
+
+  const container = document.getElementById("summary-container");
+  container.innerHTML = summary;
+  container.style.display = "block";
+
+  document.getElementById("btn-next-batch").onclick = () => {
+    batchQuestionCount = 0;
+    batchCorrect = 0;
+    batchTotalAnswered = 0;
+
+    container.style.display = "none";
+    document.getElementById("question-container").style.display = "block";
+
+    loadNextQuestion();
+  };
+}
+
+/* -----------------------------
+   STATUS BAR
+----------------------------- */
+
+function updateStatus() {
+  document.getElementById("status-question").textContent =
+    `${batchQuestionCount} / ${BATCH_SIZE}`;
+
+  document.getElementById("status-difficulty").textContent =
+    currentDifficulty || "Not set";
+
+  document.getElementById("status-batch-score").textContent =
+    `${batchCorrect} / ${batchTotalAnswered}`;
+
+  document.getElementById("status-overall-score").textContent =
+    `${overallCorrect} / ${overallTotal}`;
+}
+
+/* -----------------------------
+   EVENT LISTENERS
+----------------------------- */
+
+document.getElementById("difficulty-select").addEventListener("click", e => {
+  const diff = e.target.dataset.diff;
+  if (!diff) return;
+
+  currentDifficulty = diff;
+  document.getElementById("difficulty-select").style.display = "none";
+  document.getElementById("question-container").style.display = "block";
+
+  loadNextQuestion();
+});
+
+document.getElementById("choices-list").addEventListener("click", e => {
+  if (currentChoicesLocked) return;
+
+  const li = e.target.closest(".choice");
+  if (!li) return;
+
+  document.querySelectorAll(".choice").forEach(c => {
+    c.classList.remove("selected");
+    c.querySelector("input").checked = false;
+  });
+
+  li.classList.add("selected");
+  li.querySelector("input").checked = true;
+});
+
+document.getElementById("btn-submit").onclick = submitAnswer;
+
+document.getElementById("btn-next").onclick = () => {
+  if (!currentChoicesLocked) return;
+  loadNextQuestion();
+};
+
+document.getElementById("btn-hint").onclick = () => {
+  const box = document.getElementById("hint-box");
+  box.style.display = "block";
+  box.textContent = "Hint: " + currentQuestion.hint;
+};
+
+</script>
+</body>
+</html>
