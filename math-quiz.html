@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NC Math 2 Adaptive Quiz (Procedural)</title>
+  <title>NC Math 2 Adaptive Quiz (Hard Mode)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -90,6 +90,7 @@
     <p>Select starting difficulty:</p>
     <button class="btn-outline" data-diff="hard">Hard</button>
     <button class="btn-outline" data-diff="harder">Harder</button>
+    <button class="btn-outline" data-diff="hardest">Hardest</button>
   </div>
 
   <div id="question-container" style="display:none;">
@@ -97,12 +98,12 @@
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
           <div><strong>Standard:</strong> <span id="question-standard"></span></div>
-          <div><strong>Difficulty:</strong> <span id="question-difficulty"></span></div>
+          <div><strong>Difficulty:</strong> <span id="question-difficulty" style="text-transform: capitalize;"></span></div>
         </div>
         <div id="feedback"></div>
       </div>
 
-      <h2 id="question-stem"></h2>
+      <h2 id="question-stem" style="line-height: 1.4;"></h2>
 
       <ul id="choices-list" class="choices"></ul>
 
@@ -138,8 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentChoicesLocked = false;
 
   /* -----------------------------
-     PART 2 — PROCEDURAL MATH GENERATOR
-     (NO API NEEDED)
+     PART 2 — ADVANCED MATH GENERATOR
   ----------------------------- */
 
   async function generateMathQuestion(difficulty) {
@@ -147,20 +147,61 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         let stem, correct, wrong1, wrong2, wrong3, explanation, hint, standardTag;
 
-        if (difficulty === "harder") {
-          const a = Math.floor(Math.random() * 12) + 2; 
-          const square = a * a; 
+        if (difficulty === "hardest") {
+          // HARDEST: Systems of Linear Equations
+          const x = Math.floor(Math.random() * 10) - 5; // Target x: -5 to 4
+          const y = Math.floor(Math.random() * 10) - 5; // Target y: -5 to 4
           
-          standardTag = "NC.M2.A-REI.4 (Quadratics)";
-          stem = `Solve for x (assuming x is positive): x² - ${square} = 0`;
-          correct = `${a}`;
-          wrong1 = `${a + 2}`;
-          wrong2 = `${a * 2}`;
-          wrong3 = `${square / 2}`;
-          hint = "Move the constant to the other side and take the square root.";
-          explanation = `Add ${square} to both sides to get x² = ${square}. The square root of ${square} is ${a}.`;
+          const a = Math.floor(Math.random() * 4) + 2; // Coeff 2 to 5
+          const b = Math.floor(Math.random() * 4) + 2; 
+          const c = (a * x) + (b * y); 
+          
+          let d, e;
+          do {
+            d = Math.floor(Math.random() * 4) + 2;
+            e = Math.floor(Math.random() * 4) - 5; // Negative coeff for variety
+          } while (a * e === b * d); // Ensure the lines aren't parallel
+
+          const f = (d * x) + (e * y);
+          
+          standardTag = "NC.M2.A-REI.7 (Systems of Equations)";
+          // Using <br> to stack the equations nicely
+          stem = `Solve the system of equations:<br>1) ${a}x + ${b}y = ${c}<br>2) ${d}x ${e < 0 ? '- ' + Math.abs(e) : '+ ' + e}y = ${f}`;
+          correct = `x = ${x}, y = ${y}`;
+          wrong1 = `x = ${x + 1}, y = ${y - 1}`;
+          wrong2 = `x = ${y}, y = ${x}`;
+          wrong3 = `x = ${x - 2}, y = ${y + 2}`;
+          
+          // Failsafe in case x and y are the same number (would make wrong2 identical to correct)
+          if (x === y) wrong2 = `x = ${x + 2}, y = ${y - 2}`;
+
+          hint = "Try using the elimination method by multiplying one of the equations, or isolate a variable to use substitution.";
+          explanation = `By solving the system, the two lines intersect exactly at x = ${x} and y = ${y}.`;
+
+        } else if (difficulty === "harder") {
+          // HARDER: Factoring Quadratics (x^2 + bx + c = 0)
+          const r1 = Math.floor(Math.random() * 8) - 4; // Root 1: -4 to 3
+          let r2;
+          do { r2 = Math.floor(Math.random() * 8) - 4; } while (r1 === r2); // Ensure unique roots
+          
+          const B = -(r1 + r2);
+          const C = r1 * r2;
+
+          // Formatting the equation to look natural (e.g. avoiding "+ -3x")
+          let bStr = B === 0 ? "" : (B === 1 ? "+ x " : (B === -1 ? "- x " : (B > 0 ? `+ ${B}x ` : `- ${Math.abs(B)}x `)));
+          let cStr = C === 0 ? "" : (C > 0 ? `+ ${C}` : `- ${Math.abs(C)}`);
+          
+          standardTag = "NC.M2.A-REI.4 (Factoring Quadratics)";
+          stem = `Solve for x: x² ${bStr}${cStr} = 0`;
+          correct = `x = ${r1}, x = ${r2}`;
+          wrong1 = `x = ${-r1}, x = ${-r2}`;
+          wrong2 = `x = ${r1 + 1}, x = ${r2 - 1}`;
+          wrong3 = `x = ${r2}, x = ${r2}`; // Trick answer
+          hint = `Find two numbers that multiply to ${C} and add to ${B}.`;
+          explanation = `The equation factors perfectly to (x - ${r1})(x - ${r2}) = 0, meaning the roots are ${r1} and ${r2}.`;
           
         } else {
+          // HARD: Multi-step Linear Equations
           const multiplier = Math.floor(Math.random() * 5) + 2; 
           const x = Math.floor(Math.random() * 10) + 1; 
           const b = Math.floor(Math.random() * 20) + 1; 
@@ -206,7 +247,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("question-standard").textContent = q.standardTag;
     document.getElementById("question-difficulty").textContent = q.difficulty;
-    document.getElementById("question-stem").textContent = q.stem;
+    
+    // Using innerHTML here so our <br> tags format correctly
+    document.getElementById("question-stem").innerHTML = q.stem;
 
     const list = document.getElementById("choices-list");
     list.innerHTML = "";
@@ -306,14 +349,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const pct = batchTotalAnswered === 0 ? 0 : Math.round((batchCorrect / batchTotalAnswered) * 100);
 
     let oldDiff = currentDifficulty;
-    if (pct >= 80 && currentDifficulty === "hard") currentDifficulty = "harder";
-    else if (pct < 50 && currentDifficulty === "harder") currentDifficulty = "hard";
+    
+    // NEW ADAPTIVE LOGIC (3 Tiers)
+    if (pct >= 80) {
+      if (currentDifficulty === "hard") currentDifficulty = "harder";
+      else if (currentDifficulty === "harder") currentDifficulty = "hardest";
+    } else if (pct < 50) {
+      if (currentDifficulty === "hardest") currentDifficulty = "harder";
+      else if (currentDifficulty === "harder") currentDifficulty = "hard";
+    }
 
     const summary = `
       <h2>Batch Summary</h2>
       <p>Score: ${batchCorrect} / ${batchTotalAnswered} (${pct}%)</p>
-      <p>Previous Difficulty: ${oldDiff}</p>
-      <p>New Difficulty: ${currentDifficulty}</p>
+      <p>Previous Difficulty: <span style="text-transform: capitalize;">${oldDiff}</span></p>
+      <p>New Difficulty: <span style="text-transform: capitalize;">${currentDifficulty}</span></p>
       <button id="btn-next-batch" class="btn-primary">Next Batch</button>
     `;
 
